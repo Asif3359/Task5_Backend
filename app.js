@@ -22,6 +22,14 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
+// Allow frontend (e.g. localhost:3000) to call API (e.g. localhost:5001)
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    optionsSuccessStatus: 200,
+  }),
+);
+
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/song", songsRouter);

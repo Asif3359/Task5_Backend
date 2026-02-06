@@ -41,10 +41,12 @@ router.get("/", function (req, res) {
       genres: localeData.genres,
     });
 
+    // Per-song RNG for likes so each song gets different count and matches /song/:index/details
+    const likeRng = getRng(seed, `likes-${index}`);
     songs.push({
       index,
       ...song,
-      likes: generateLikes(Number(likes), rng),
+      likes: generateLikes(Number(likes), likeRng),
     });
   }
 
@@ -75,7 +77,6 @@ router.get("/:index/details", (req, res) => {
     return res.status(400).json({ error: "Invalid locale" });
   }
 
-  // Song deterministic
   const songRng = getRng(seed, index);
 
   const song = generateSong({
@@ -86,22 +87,18 @@ router.get("/:index/details", (req, res) => {
     genres: localeData.genres,
   });
 
-  // Likes deterministic (independent)
   const likeRng = getRng(seed, `likes-${index}`);
   const songLikes = generateLikes(Number(likes), likeRng);
 
-  // Cover metadata (frontend will render)
   const cover = {
     style: ["gradient", "noise", "pattern"][Math.floor(songRng() * 3)],
     title: song.title,
     artist: song.artist,
   };
 
-  // Fake review (seeded)
   const reviews = localeData.reviews;
   const review = reviews[Math.floor(songRng() * reviews.length)];
 
-  // Lyrics (seeded lines)
   const lyrics = localeData.lyrics.sort(() => songRng() - 0.5).slice(0, 6);
 
   res.json({
@@ -116,42 +113,6 @@ router.get("/:index/details", (req, res) => {
     lyrics,
   });
 });
-
-// router.get("/:index/preview", async (req, res) => {
-//   const { seed = "1" } = req.query;
-//   const { index } = req.params;
-
-//   const rng = getRng(seed, `audio-${index}`);
-
-//   const sampleRate = 44100;
-//   const duration = 5; // seconds
-//   const length = sampleRate * duration;
-
-//   const channelData = new Float32Array(length);
-
-//   // Simple melody (seeded)
-//   const baseFreq = 220 + Math.floor(rng() * 220);
-
-//   for (let i = 0; i < length; i++) {
-//     const t = i / sampleRate;
-//     const freq = baseFreq * (1 + (Math.floor(t) % 4) * 0.25);
-//     channelData[i] = Math.sin(2 * Math.PI * freq * t) * 0.3;
-//   }
-
-//   const audioData = {
-//     sampleRate,
-//     getChannelData: () => [channelData],
-//   };
-
-//   const buffer = await WavEncoder.encode(audioData);
-
-//   res.set({
-//     "Content-Type": "audio/wav",
-//     "Content-Length": buffer.byteLength,
-//   });
-
-//   res.send(Buffer.from(buffer));
-// });
 
 router.get("/:index/preview", async (req, res) => {
   try {

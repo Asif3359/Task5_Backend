@@ -6,7 +6,6 @@
 
 var app = require("../app");
 var debug = require("debug")("task5-backend:server");
-const db = require("../config/db.js");
 var http = require("http");
 
 /**
